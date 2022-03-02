@@ -1108,7 +1108,7 @@ index ac5e263d737973af077e3406a84a84baca4370db..2d91924b7f5ef16a91d40cdc1bfc3d68
 +    // Paper end
  }
 diff --git a/src/main/java/org/bukkit/UnsafeValues.java b/src/main/java/org/bukkit/UnsafeValues.java
-index 01e11f882abb6c631f810584aa23646042688435..f43ad19a44f3b7368a1a110cc55247277f4d3751 100644
+index 01e11f882abb6c631f810584aa23646042688435..178bbe7962127b331d252dee1d1eb3b260b65b5d 100644
 --- a/src/main/java/org/bukkit/UnsafeValues.java
 +++ b/src/main/java/org/bukkit/UnsafeValues.java
 @@ -22,6 +22,14 @@ import org.bukkit.plugin.PluginDescriptionFile;
@@ -1123,9 +1123,9 @@ index 01e11f882abb6c631f810584aa23646042688435..f43ad19a44f3b7368a1a110cc5524727
 +    @Deprecated net.kyori.adventure.text.serializer.gson.GsonComponentSerializer colorDownsamplingGsonComponentSerializer();
 +    @Deprecated net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer legacyComponentSerializer();
 +    // Paper end
-
+ 
      Material toLegacy(Material material);
-
+ 
 diff --git a/src/main/java/org/bukkit/Warning.java b/src/main/java/org/bukkit/Warning.java
 index efb97712cc9dc7c1e12a59f5b94e4f2ad7c6b7d8..3024468af4c073324e536c1cb26beffb1e09f3f4 100644
 --- a/src/main/java/org/bukkit/Warning.java
@@ -1284,7 +1284,7 @@ index ab6b0ec328e94bf65a0dafd0403e5ee3b870296c..c8d37184d8e882a4084a1bfef85faa33
  
      /**
 diff --git a/src/main/java/org/bukkit/command/Command.java b/src/main/java/org/bukkit/command/Command.java
-index 4bfc214685164a38ba4261b2bae7faa8a3bd297e..50e6d45ec9349b56d20e2ffc664eca15ba936cc6 100644
+index 4bfc214685164a38ba4261b2bae7faa8a3bd297e..8edd78adb042013bf702027f59455045d3b3e14f 100644
 --- a/src/main/java/org/bukkit/command/Command.java
 +++ b/src/main/java/org/bukkit/command/Command.java
 @@ -32,8 +32,7 @@ public abstract class Command {

@@ -1,0 +1,149 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Vitaly Rudenko <maurice.dederick@gmail.com>
+Date: Sun, 15 May 2022 23:15:52 +0300
+Subject: [PATCH] GlimCraft: Added isProxyOnlineMode() logging
+
+
+diff --git a/src/main/java/com/destroystokyo/paper/PaperConfig.java b/src/main/java/com/destroystokyo/paper/PaperConfig.java
+index 1ac6cf51f2682d5eb14fe19646e79f6617d492dd..56a9cbf0ca7de83e132b33583d7fdd77a7bf00f0 100644
+--- a/src/main/java/com/destroystokyo/paper/PaperConfig.java
++++ b/src/main/java/com/destroystokyo/paper/PaperConfig.java
+@@ -10,6 +10,7 @@ import java.lang.reflect.InvocationTargetException;
+ import java.lang.reflect.Method;
+ import java.lang.reflect.Modifier;
+ import java.nio.charset.StandardCharsets;
++import java.util.Arrays;
+ import java.util.HashMap;
+ import java.util.List;
+ import java.util.Map;
+@@ -294,7 +295,8 @@ public class PaperConfig {
+         bungeeOnlineMode = getBoolean("settings.bungee-online-mode", true);
+     }
+ 
+-    public static boolean isProxyOnlineMode() {
++    public static boolean isProxyOnlineMode(String name) {
++        log("[GlimCraft] PaperConfig#isProxyOnlineMode(" + name + ")");
+         return Bukkit.getOnlineMode() || (SpigotConfig.bungee && bungeeOnlineMode) || (velocitySupport && velocityOnlineMode);
+     }
+ 
+diff --git a/src/main/java/com/destroystokyo/paper/profile/CraftPlayerProfile.java b/src/main/java/com/destroystokyo/paper/profile/CraftPlayerProfile.java
+index 2041376dfd5520776f7e32c1828973f2b719d82a..21e2acae30dd0b2787e2cdef45e5cb626b2e2042 100644
+--- a/src/main/java/com/destroystokyo/paper/profile/CraftPlayerProfile.java
++++ b/src/main/java/com/destroystokyo/paper/profile/CraftPlayerProfile.java
+@@ -177,7 +177,7 @@ public class CraftPlayerProfile implements PlayerProfile, SharedPlayerProfile {
+ 
+     @Override
+     public boolean completeFromCache() {
+-        return completeFromCache(false, PaperConfig.isProxyOnlineMode());
++        return completeFromCache(false, PaperConfig.isProxyOnlineMode(getName()));
+     }
+ 
+     public boolean completeFromCache(boolean onlineMode) {
+@@ -220,7 +220,7 @@ public class CraftPlayerProfile implements PlayerProfile, SharedPlayerProfile {
+     }
+ 
+     public boolean complete(boolean textures) {
+-        return complete(textures, PaperConfig.isProxyOnlineMode());
++        return complete(textures, PaperConfig.isProxyOnlineMode(getName()));
+     }
+     public boolean complete(boolean textures, boolean onlineMode) {
+         MinecraftServer server = MinecraftServer.getServer();
+diff --git a/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java b/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
+index befcb501b4b1b6330bf3cd53e00e30b01efade6f..6893247eda92c7d9ef9107f5f1a80c91d1ad204e 100644
+--- a/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
++++ b/src/main/java/net/minecraft/server/network/ServerLoginPacketListenerImpl.java
+@@ -253,7 +253,7 @@ public class ServerLoginPacketListenerImpl implements ServerLoginPacketListener
+         this.gameProfile = packet.getGameProfile();
+         Validate.validState(ServerLoginPacketListenerImpl.isValidUsername(this.gameProfile.getName()), "Invalid characters in username", new Object[0]);
+         // Paper start - validate usernames
+-        if (com.destroystokyo.paper.PaperConfig.isProxyOnlineMode() && com.destroystokyo.paper.PaperConfig.performUsernameValidation) {
++        if (com.destroystokyo.paper.PaperConfig.isProxyOnlineMode(this.gameProfile.getName()) && com.destroystokyo.paper.PaperConfig.performUsernameValidation) {
+             if (!this.iKnowThisMayNotBeTheBestIdeaButPleaseDisableUsernameValidation && !validateUsername(this.gameProfile.getName())) {
+                 ServerLoginPacketListenerImpl.this.disconnect("Failed to verify username!");
+                 return;
+diff --git a/src/main/java/net/minecraft/server/players/GameProfileCache.java b/src/main/java/net/minecraft/server/players/GameProfileCache.java
+index 9259eeea54d77ddecf044edf80e0eca6cb95278f..2f6ff5fbd139eef654dbf4145b455f908de5f0b8 100644
+--- a/src/main/java/net/minecraft/server/players/GameProfileCache.java
++++ b/src/main/java/net/minecraft/server/players/GameProfileCache.java
+@@ -105,11 +105,11 @@ public class GameProfileCache {
+             }
+         };
+ 
+-        if (com.destroystokyo.paper.PaperConfig.isProxyOnlineMode()) // Paper - only run in online mode - 100 COL
++        if (com.destroystokyo.paper.PaperConfig.isProxyOnlineMode(name)) // Paper - only run in online mode - 100 COL
+         repository.findProfilesByNames(new String[]{name}, Agent.MINECRAFT, profilelookupcallback);
+         GameProfile gameprofile = (GameProfile) atomicreference.get();
+ 
+-        if (!GameProfileCache.usesAuthentication() && gameprofile == null && !org.apache.commons.lang3.StringUtils.isBlank(name)) { // Paper - Don't lookup a profile with a blank name
++        if (!GameProfileCache.usesAuthentication(name) && gameprofile == null && !org.apache.commons.lang3.StringUtils.isBlank(name)) { // Paper - Don't lookup a profile with a blank name
+             UUID uuid = Player.createPlayerUUID(new GameProfile((UUID) null, name));
+ 
+             return Optional.of(new GameProfile(uuid, name));
+@@ -122,8 +122,8 @@ public class GameProfileCache {
+         GameProfileCache.usesAuthentication = value;
+     }
+ 
+-    private static boolean usesAuthentication() {
+-        return com.destroystokyo.paper.PaperConfig.isProxyOnlineMode(); // Paper
++    private static boolean usesAuthentication(String name) {
++        return com.destroystokyo.paper.PaperConfig.isProxyOnlineMode(name); // Paper
+     }
+ 
+     public void add(GameProfile profile) {
+diff --git a/src/main/java/net/minecraft/server/players/OldUsersConverter.java b/src/main/java/net/minecraft/server/players/OldUsersConverter.java
+index aa3caccc58f1cec8d5f396813d7fc40b05985cc8..89fd57e3f8cb10923c4e8f8d0465af2cad4724a8 100644
+--- a/src/main/java/net/minecraft/server/players/OldUsersConverter.java
++++ b/src/main/java/net/minecraft/server/players/OldUsersConverter.java
+@@ -22,6 +22,8 @@ import java.util.Map;
+ import java.util.Optional;
+ import java.util.UUID;
+ import javax.annotation.Nullable;
++
++import joptsimple.internal.Strings;
+ import net.minecraft.nbt.CompoundTag;
+ import net.minecraft.nbt.NbtIo;
+ import net.minecraft.server.MinecraftServer;
+@@ -67,7 +69,7 @@ public class OldUsersConverter {
+         });
+ 
+         if (server.usesAuthentication()
+-                || (com.destroystokyo.paper.PaperConfig.isProxyOnlineMode())) { // Spigot: bungee = online mode, for now.  // Paper - Handle via setting
++                || (com.destroystokyo.paper.PaperConfig.isProxyOnlineMode(Strings.join(astring, ", ")))) { // Spigot: bungee = online mode, for now.  // Paper - Handle via setting
+             server.getProfileRepository().findProfilesByNames(astring, Agent.MINECRAFT, callback);
+         } else {
+             String[] astring1 = astring;
+diff --git a/src/main/java/net/minecraft/server/players/PlayerList.java b/src/main/java/net/minecraft/server/players/PlayerList.java
+index 95fe4240f3e1174ec36598f24d63f0073c13b376..4364c547ef3dbb2a502c78d4c815669373cbba31 100644
+--- a/src/main/java/net/minecraft/server/players/PlayerList.java
++++ b/src/main/java/net/minecraft/server/players/PlayerList.java
+@@ -714,7 +714,7 @@ public abstract class PlayerList {
+ 
+         for (int i = 0; i < this.players.size(); ++i) {
+             entityplayer = (ServerPlayer) this.players.get(i);
+-            if (entityplayer.getUUID().equals(uuid) || (com.destroystokyo.paper.PaperConfig.isProxyOnlineMode() && entityplayer.getGameProfile().getName().equalsIgnoreCase(gameprofile.getName()))) { // Paper - validate usernames
++            if (entityplayer.getUUID().equals(uuid) || (com.destroystokyo.paper.PaperConfig.isProxyOnlineMode(gameprofile.getName()) && entityplayer.getGameProfile().getName().equalsIgnoreCase(gameprofile.getName()))) { // Paper - validate usernames
+                 list.add(entityplayer);
+             }
+         }
+diff --git a/src/main/java/org/bukkit/craftbukkit/CraftServer.java b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
+index 15278bb897e6169bc5d02bf47b455634baec7be1..c46de519fedc7043ff3400c14ea8c13e64eb5b33 100644
+--- a/src/main/java/org/bukkit/craftbukkit/CraftServer.java
++++ b/src/main/java/org/bukkit/craftbukkit/CraftServer.java
+@@ -1779,7 +1779,7 @@ public final class CraftServer implements Server {
+         }
+         GameProfile profile;
+         // Only fetch an online UUID in online mode
+-        if (com.destroystokyo.paper.PaperConfig.isProxyOnlineMode()) {
++        if (com.destroystokyo.paper.PaperConfig.isProxyOnlineMode(name)) {
+             profile = console.getProfileCache().get(name).orElse(null);
+         } else {
+             // Make an OfflinePlayer using an offline mode UUID since the name has no profile
+@@ -1800,7 +1800,7 @@ public final class CraftServer implements Server {
+             // Spigot Start
+             GameProfile profile = null;
+             // Only fetch an online UUID in online mode
+-            if ( this.getOnlineMode() || com.destroystokyo.paper.PaperConfig.isProxyOnlineMode() ) // Paper - Handle via setting
++            if ( this.getOnlineMode() || com.destroystokyo.paper.PaperConfig.isProxyOnlineMode(name) ) // Paper - Handle via setting
+             {
+                 profile = this.console.getProfileCache().get(name).orElse(null);
+             }

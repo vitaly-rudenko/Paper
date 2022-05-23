@@ -5,7 +5,7 @@ Subject: [PATCH] Glimcraft: Custom Velocity Whitelist check
 
 
 diff --git a/src/main/java/com/destroystokyo/paper/PaperConfig.java b/src/main/java/com/destroystokyo/paper/PaperConfig.java
-index 1ac6cf51f2682d5eb14fe19646e79f6617d492dd..821c4290fc382862ea6e3b2ce39648d03967e4ba 100644
+index 1ac6cf51f2682d5eb14fe19646e79f6617d492dd..f9455f5dc2b5b909a6920cb8095bcd3d7d3a3986 100644
 --- a/src/main/java/com/destroystokyo/paper/PaperConfig.java
 +++ b/src/main/java/com/destroystokyo/paper/PaperConfig.java
 @@ -15,9 +15,11 @@ import java.util.List;
@@ -20,29 +20,38 @@ index 1ac6cf51f2682d5eb14fe19646e79f6617d492dd..821c4290fc382862ea6e3b2ce39648d0
  import net.minecraft.server.MinecraftServer;
  import org.bukkit.Bukkit;
  import org.bukkit.ChatColor;
-@@ -294,7 +296,21 @@ public class PaperConfig {
+@@ -294,7 +296,11 @@ public class PaperConfig {
          bungeeOnlineMode = getBoolean("settings.bungee-online-mode", true);
      }
  
 -    public static boolean isProxyOnlineMode() {
-+    public static WhitelistApi whitelistApi;
 +    public static boolean isProxyOnlineMode(String playerName) {
-+        log("PaperConfig#isProxyOnlineMode(" + playerName + ")");
-+
-+        if (whitelistApi == null) {
-+            log("Creating WhitelistApi instance...");
-+            whitelistApi = new WhitelistApi(
-+                getString("settings.glimcraft.apiUrl", "http://api:3000"),
-+                getString("settings.glimcraft.apiKey", "api-key-123"),
-+                Logger.getLogger("GlimcraftWhitelistAPI")
-+            );
-+        }
++        log("[GlimCraft] PaperConfig#isProxyOnlineMode(" + playerName + ")");
 +
 +        if (!whitelistApi.isPremium(playerName)) return false;
 +
          return Bukkit.getOnlineMode() || (SpigotConfig.bungee && bungeeOnlineMode) || (velocitySupport && velocityOnlineMode);
      }
  
+@@ -390,10 +396,18 @@ public class PaperConfig {
+         autoRecipeLimit = getInt("settings.spam-limiter.recipe-spam-limit", autoRecipeLimit);
+     }
+ 
++    public static WhitelistApi whitelistApi;
+     public static boolean velocitySupport;
+     public static boolean velocityOnlineMode;
+     public static byte[] velocitySecretKey;
+     private static void velocitySupport() {
++        log("[GlimCraft] Initializing WhitelistApi...");
++        whitelistApi = new WhitelistApi(
++            getString("settings.glimcraft.apiUrl", "http://whitelist-api:3000"),
++            getString("settings.glimcraft.apiKey", "api-key-123"),
++            Logger.getLogger("GlimcraftWhitelistAPI")
++        );
++
+         velocitySupport = getBoolean("settings.velocity-support.enabled", false);
+         velocityOnlineMode = getBoolean("settings.velocity-support.online-mode", false);
+         String secret = getString("settings.velocity-support.secret", "");
 diff --git a/src/main/java/com/destroystokyo/paper/profile/CraftPlayerProfile.java b/src/main/java/com/destroystokyo/paper/profile/CraftPlayerProfile.java
 index 2041376dfd5520776f7e32c1828973f2b719d82a..21e2acae30dd0b2787e2cdef45e5cb626b2e2042 100644
 --- a/src/main/java/com/destroystokyo/paper/profile/CraftPlayerProfile.java

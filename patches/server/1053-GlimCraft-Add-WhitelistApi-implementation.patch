@@ -1,21 +1,23 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Vitaly Rudenko <maurice.dederick@gmail.com>
-Date: Mon, 10 Jun 2024 23:13:23 +0300
+Date: Mon, 10 Jun 2024 23:42:52 +0300
 Subject: [PATCH] [GlimCraft] Add WhitelistApi implementation
 
 
 diff --git a/src/main/java/online/glimcraft/whitelist/WhitelistApi.java b/src/main/java/online/glimcraft/whitelist/WhitelistApi.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..7c0bd95930102f2335bfed096a109c26b44e7d4e
+index 0000000000000000000000000000000000000000..af14fa22f4eea95cceb942433f616ddd78dd903a
 --- /dev/null
 +++ b/src/main/java/online/glimcraft/whitelist/WhitelistApi.java
 @@ -0,0 +1,136 @@
 +package online.glimcraft.whitelist;
 +
++import com.mojang.logging.LogUtils;
 +import org.jetbrains.annotations.NotNull;
 +import org.json.simple.JSONArray;
 +import org.json.simple.JSONObject;
 +import org.json.simple.parser.JSONParser;
++import org.slf4j.Logger;
 +
 +import java.net.URI;
 +import java.net.http.HttpClient;
@@ -26,25 +28,23 @@ index 0000000000000000000000000000000000000000..7c0bd95930102f2335bfed096a109c26
 +import java.util.HashMap;
 +import java.util.List;
 +import java.util.Map;
-+import java.util.logging.Level;
-+import java.util.logging.Logger;
 +
 +public class WhitelistApi {
 +    public record WhitelistEntry(String name, String uuid, boolean isPremium) {}
 +
++    private static final Logger LOGGER = LogUtils.getLogger();
++
 +    private final String apiUrl;
 +    private final String apiKey;
-+    private final Logger logger;
 +
 +    private final HttpClient client = HttpClient.newHttpClient();
 +    private final Map<String, WhitelistEntry> whitelistEntryCache = new HashMap<>();
 +
 +    private boolean isInitialized = false;
 +
-+    public WhitelistApi(String apiUrl, String apiKey, Logger logger) {
++    public WhitelistApi(String apiUrl, String apiKey) {
 +        this.apiUrl = apiUrl;
 +        this.apiKey = apiKey;
-+        this.logger = logger;
 +    }
 +
 +    public boolean isPremium(String name) {
@@ -55,20 +55,20 @@ index 0000000000000000000000000000000000000000..7c0bd95930102f2335bfed096a109c26
 +        initializeWhitelistEntriesIfNecessary();
 +
 +        if (whitelistEntryCache.containsKey(name)) {
-+            logger.info(name + "'s whitelist entry is already loaded, using cached version: " + whitelistEntryCache.get(name));
++            LOGGER.info(name + "'s whitelist entry is already loaded, using cached version: " + whitelistEntryCache.get(name));
 +        }
 +
 +        if (!whitelistEntryCache.containsKey(name)) {
-+            logger.info( name + " is not in the cache, loading their whitelist entry...");
++            LOGGER.info( name + " is not in the cache, loading their whitelist entry...");
 +
 +            try {
 +                whitelistEntryCache.put(name, fetchWhitelistEntry(name));
 +            } catch (Exception exception) {
-+                logger.log(Level.SEVERE, "Could not fetch whitelist entry for " + name, exception);
++                LOGGER.error("Could not fetch whitelist entry for " + name, exception);
 +                throw new RuntimeException(exception);
 +            }
 +
-+            logger.info(name + "'s whitelist entry: " + whitelistEntryCache.get(name));
++            LOGGER.info(name + "'s whitelist entry: " + whitelistEntryCache.get(name));
 +        }
 +
 +        return whitelistEntryCache.get(name);
@@ -91,7 +91,7 @@ index 0000000000000000000000000000000000000000..7c0bd95930102f2335bfed096a109c26
 +            }
 +            isInitialized = true;
 +        } catch (Exception exception) {
-+            logger.log(Level.SEVERE, "Could not fetch whitelist entries", exception);
++            LOGGER.error("Could not fetch whitelist entries", exception);
 +            throw new RuntimeException(exception);
 +        }
 +    }

@@ -28,7 +28,7 @@ index cbe2789f8a055550dd7840a7bed980efd65eb9a1..0c31996dc8f905d5822e18e360e59adc
      public boolean complete(boolean textures, boolean onlineMode) {
          if (this.isComplete() && (!textures || hasTextures())) { // Don't do lookup if we already have everything
 diff --git a/src/main/java/io/papermc/paper/configuration/GlobalConfiguration.java b/src/main/java/io/papermc/paper/configuration/GlobalConfiguration.java
-index 4b342da42ae75a4248cecd1b839ef499a678fa5c..7c581f3f5e5bb0ef3cbb48979372bf6e9d48c037 100644
+index aaffb08ede6a881c2bad74ecb239bcf4e4623003..e29d76b2947140e64e3a3bc811369f1aa3e89a5f 100644
 --- a/src/main/java/io/papermc/paper/configuration/GlobalConfiguration.java
 +++ b/src/main/java/io/papermc/paper/configuration/GlobalConfiguration.java
 @@ -8,6 +8,7 @@ import net.kyori.adventure.text.Component;
@@ -45,7 +45,7 @@ index 4b342da42ae75a4248cecd1b839ef499a678fa5c..7c581f3f5e5bb0ef3cbb48979372bf6e
          public boolean proxyProtocol = false;
 -        public boolean isProxyOnlineMode() {
 +        public boolean isProxyOnlineMode(String playerName) {
-+            if (!glimcraft.whitelistApi.isPremium(playerName)) return false;
++            if (!WhitelistApi.isPremium(playerName)) return false;
              return org.bukkit.Bukkit.getOnlineMode() || (org.spigotmc.SpigotConfig.bungee && this.bungeeCord.onlineMode) || (this.velocity.enabled && this.velocity.onlineMode);
          }
      }

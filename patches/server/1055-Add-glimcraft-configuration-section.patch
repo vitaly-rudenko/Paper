@@ -5,10 +5,10 @@ Subject: [PATCH] Add "glimcraft" configuration section
 
 
 diff --git a/src/main/java/io/papermc/paper/configuration/GlobalConfiguration.java b/src/main/java/io/papermc/paper/configuration/GlobalConfiguration.java
-index 2874bc3001c4e7d9191e47ba512c5a68369c21f1..4b342da42ae75a4248cecd1b839ef499a678fa5c 100644
+index 2874bc3001c4e7d9191e47ba512c5a68369c21f1..aaffb08ede6a881c2bad74ecb239bcf4e4623003 100644
 --- a/src/main/java/io/papermc/paper/configuration/GlobalConfiguration.java
 +++ b/src/main/java/io/papermc/paper/configuration/GlobalConfiguration.java
-@@ -344,4 +344,20 @@ public class GlobalConfiguration extends ConfigurationPart {
+@@ -344,4 +344,10 @@ public class GlobalConfiguration extends ConfigurationPart {
          public boolean disableChorusPlantUpdates = false;
          public boolean disableMushroomBlockUpdates = false;
      }
@@ -17,15 +17,5 @@ index 2874bc3001c4e7d9191e47ba512c5a68369c21f1..4b342da42ae75a4248cecd1b839ef499
 +    public class Glimcraft extends ConfigurationPart {
 +        public String apiUrl;
 +        public String apiKey;
-+
-+        private @Nullable WhitelistApi whitelistApi;
-+        public WhitelistApi getWhitelistApi() {
-+            if (whitelistApi == null) {
-+                LOGGER.error("[GlimCraft] Initializing WhitelistApi...");
-+                whitelistApi = new WhitelistApi(apiUrl, apiKey);
-+            }
-+
-+            return whitelistApi;
-+        }
 +    }
  }

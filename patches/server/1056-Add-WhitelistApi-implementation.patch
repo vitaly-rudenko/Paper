@@ -6,10 +6,10 @@ Subject: [PATCH] Add WhitelistApi implementation
 
 diff --git a/src/main/java/online/glimcraft/whitelist/WhitelistApi.java b/src/main/java/online/glimcraft/whitelist/WhitelistApi.java
 new file mode 100644
-index 0000000000000000000000000000000000000000..4167024f395dc1c2a203f049a43d4bdf29254535
+index 0000000000000000000000000000000000000000..da5adcba6d8098f5bd662af78d00bfe64e98b9d1
 --- /dev/null
 +++ b/src/main/java/online/glimcraft/whitelist/WhitelistApi.java
-@@ -0,0 +1,129 @@
+@@ -0,0 +1,136 @@
 +package online.glimcraft.whitelist;
 +
 +import com.mojang.logging.LogUtils;
@@ -76,7 +76,6 @@ index 0000000000000000000000000000000000000000..4167024f395dc1c2a203f049a43d4bdf
 +        }
 +
 +        try {
-+            System.out.println("Fetching whitelist entries...");
 +            List<WhitelistEntry> entries = fetchWhitelistEntries();
 +            for (WhitelistEntry entry : entries) {
 +                whitelistEntryCache.put(entry.name(), entry);
@@ -90,9 +89,13 @@ index 0000000000000000000000000000000000000000..4167024f395dc1c2a203f049a43d4bdf
 +    }
 +
 +    private static @NotNull WhitelistEntry fetchWhitelistEntry(@NotNull String name) throws Exception {
++        final String apiUrl = GlobalConfiguration.get().glimcraft.apiUrl;
++        final String apiKey = GlobalConfiguration.get().glimcraft.apiKey;
++
++        System.out.println("Fetching whitelist entry for " + name + " from apiUrl: " + apiUrl + " with apiKey: " + apiKey);
 +        HttpRequest request = HttpRequest.newBuilder()
-+            .uri(new URI(GlobalConfiguration.get().glimcraft.apiUrl + "/whitelist/" + name))
-+            .header("x-api-key", GlobalConfiguration.get().glimcraft.apiKey)
++            .uri(new URI(apiUrl + "/whitelist/" + name))
++            .header("x-api-key", apiKey)
 +            .timeout(Duration.ofSeconds(30))
 +            .GET()
 +            .build();
@@ -108,9 +111,13 @@ index 0000000000000000000000000000000000000000..4167024f395dc1c2a203f049a43d4bdf
 +    }
 +
 +    private static @NotNull List<WhitelistEntry> fetchWhitelistEntries() throws Exception {
++        final String apiUrl = GlobalConfiguration.get().glimcraft.apiUrl;
++        final String apiKey = GlobalConfiguration.get().glimcraft.apiKey;
++
++        System.out.println("Fetching whitelist entries from apiUrl: " + apiUrl + " with apiKey: " + apiKey);
 +        HttpRequest request = HttpRequest.newBuilder()
 +            .uri(new URI(GlobalConfiguration.get().glimcraft.apiUrl + "/whitelist"))
-+            .header("x-api-key", GlobalConfiguration.get().glimcraft.apiKey)
++            .header("x-api-key", apiKey)
 +            .timeout(Duration.ofSeconds(30))
 +            .GET()
 +            .build();
